@@ -1,0 +1,83 @@
+/* Custom Dark Red Color Palette (Shaded in Black) */
+:root {
+    --primary-red: #5C0000;   /* Darker, muted red */
+    --accent-red: #7C0000;    /* Slightly brighter accent red */
+    --dark-bg: #0A0000;       /* Very dark, almost black background */
+    --dark-slate: #150000;    /* Darker background for elements */
+    --text-color: #e0e0e0;    /* Lighter, neutral text for better readability */
+    --light-text: #c0c0c0;    /* Muted light text for accents */
+    --border-color: #260000;  /* Darker, subtle border color */
+}
+
+body {
+    background-color: var(--dark-bg);
+    color: var(--text-color);
+    font-family: 'Inter', sans-serif;
+}
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: var(--dark-slate);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--primary-red);
+    border-radius: 10px;
+}
+.loader {
+    border-top-color: var(--primary-red);
+    animation: spinner 1.5s linear infinite;
+}
+@keyframes spinner {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+/* Common styles for anime cards */
+.anime-card:hover .play-overlay {
+    opacity: 1;
+}
+/* Common styles for video containers */
+.video-container {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 */
+    height: 0;
+    overflow: hidden;
+    background: #000;
+    border-radius: 1.5rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+.video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+/* Common styles for hero sections */
+.hero-gradient {
+    background: linear-gradient(to bottom, rgba(10, 0, 0, 0.4), var(--dark-bg));
+}
+/* Specific styles for search modal */
+#search-modal {
+    background: rgba(10, 0, 0, 0.95);
+    backdrop-filter: blur(8px);
+}
+/* Specific styles for series page */
+.season-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--primary-red);
+}
+/* Specific styles for watch page */
+.ep-active {
+    border-color: var(--primary-red) !important;
+    background: rgba(92, 0, 0, 0.1) !important;
+}
+/* Specific styles for episodes page */
+.episode-card {
+    transition: all 0.3s ease;
+}
+.episode-card:hover {
+    background-color: rgba(21, 0, 0, 0.8);
+    transform: scale(1.01);
+}

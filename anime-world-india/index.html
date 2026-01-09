@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anime World India</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+        }
+        .anime-card:hover .play-overlay {
+            opacity: 1;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 10px;
+        }
+        .loader {
+            border-top-color: #3b82f6;
+            animation: spinner 1.5s linear infinite;
+        }
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #search-modal {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(8px);
+        }
+    </style>
+</head>
+<body class="custom-scrollbar">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="bg-blue-600 p-2 rounded-lg">
+                    <i class="fas fa-play text-white"></i>
+                </div>
+                <h1 class="text-xl font-bold tracking-tight">ANIME<span class="text-blue-500">WORLD</span></h1>
+            </div>
+            
+            <nav class="hidden md:flex space-x-8 text-sm font-medium text-slate-400">
+                <a href="#" class="hover:text-blue-400 transition">Home</a>
+                <a href="/allseries.php" class="hover:text-blue-400 transition">Series</a>
+                <a href="/allmovie.php" class="hover:text-blue-400 transition">Movies</a>
+                <a href="#" class="hover:text-blue-400 transition">Popular</a>
+            </nav>
+
+            <div class="flex items-center space-x-4">
+                <button onclick="toggleSearch(true)" class="p-2 text-slate-400 hover:text-white transition"><i class="fas fa-search"></i></button>
+                <button class="bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-full text-sm font-semibold transition">Login</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Search Modal -->
+    <div id="search-modal" class="fixed inset-0 z-[60] hidden flex-col">
+        <div class="container mx-auto px-4 py-6 flex-1 flex flex-col">
+            <div class="flex justify-between items-center mb-8">
+                <div class="flex-1 max-w-2xl relative flex gap-2">
+                    <div class="relative flex-1">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                        <input 
+                            type="text" 
+                            id="search-input"
+                            placeholder="Search anime series or movies..." 
+                            class="w-full bg-slate-800 border-2 border-slate-700 rounded-xl py-4 pl-12 pr-4 focus:outline-none focus:border-blue-500 transition text-lg"
+                            oninput="handleSearch(this.value)"
+                            onkeydown="if(event.key === 'Enter') performFullSearch()"
+                        >
+                    </div>
+                    <button 
+                        onclick="performFullSearch()"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 rounded-xl font-bold transition flex items-center gap-2 shrink-0"
+                    >
+                        <span>Search</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+                <button onclick="toggleSearch(false)" class="ml-4 p-4 text-slate-400 hover:text-white text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Search Results -->
+            <div id="search-results-container" class="flex-1 overflow-y-auto custom-scrollbar">
+                <div id="search-placeholder" class="text-center py-20 text-slate-500">
+                    <i class="fas fa-film text-6xl mb-4 block opacity-20"></i>
+                    <p>Start typing to search across the multiverse...</p>
+                </div>
+                <div id="search-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 pb-10">
+                    <!-- Dynamic Search Results -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        
+        <!-- A-Z Navigation List -->
+        <section class="mb-10 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+            <div class="flex items-center space-x-4 overflow-x-auto pb-2 custom-scrollbar">
+                <span class="text-slate-500 font-bold text-sm uppercase shrink-0">A-Z List:</span>
+                <div class="flex space-x-2" id="az-list">
+                    <!-- Javascript will inject the #, A-Z list here -->
+                </div>
+            </div>
+        </section>
+        
+        <!-- Loading State -->
+        <div id="loading" class="flex flex-col items-center justify-center min-h-[60vh]">
+            <div class="loader ease-linear rounded-full border-4 border-t-4 border-slate-700 h-12 w-12 mb-4"></div>
+            <p class="text-slate-400 animate-pulse">Fetching latest anime...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error" class="hidden flex flex-col items-center justify-center min-h-[60vh] text-center">
+            <i class="fas fa-exclamation-circle text-red-500 text-5xl mb-4"></i>
+            <h2 class="text-2xl font-bold">Oops! Something went wrong</h2>
+            <p class="text-slate-400 mt-2">Could not connect to the API. Please try again later.</p>
+            <button onclick="fetchAnimeData()" class="mt-6 bg-slate-800 hover:bg-slate-700 px-6 py-2 rounded-lg transition">Retry</button>
+        </div>
+
+        <!-- Content Area -->
+        <div id="content" class="hidden space-y-12">
+            
+            <!-- Latest Series Section -->
+            <section>
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold flex items-center">
+                        <span class="w-1 h-8 bg-blue-500 rounded-full mr-3"></span>
+                        Latest Series
+                    </h2>
+                    <a href="/allseries.php" class="text-blue-500 text-sm hover:underline">View All</a>
+                </div>
+                <div id="series-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                    <!-- Cards will be injected here -->
+                </div>
+            </section>
+
+            <!-- Latest Movies Section -->
+            <section>
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold flex items-center">
+                        <span class="w-1 h-8 bg-purple-500 rounded-full mr-3"></span>
+                        Latest Movies
+                    </h2>
+                    <a href="/allmovie.php" class="text-purple-500 text-sm hover:underline">View All</a>
+                </div>
+                <div id="movies-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                    <!-- Cards will be injected here -->
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 mt-12 py-8 bg-slate-900">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm">© 2024 Anime World India. Data provided by TMDB.</p>
+            <div class="flex justify-center space-x-6 mt-4 text-slate-400">
+                <a href="#" class="hover:text-white"><i class="fab fa-discord"></i></a>
+                <a href="#" class="hover:text-white"><i class="fab fa-telegram"></i></a>
+                <a href="#" class="hover:text-white"><i class="fab fa-twitter"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const HOME_API_URL = '/api/anime-world-india/v1/home.php';
+        const SEARCH_API_URL = 'https://anime-world.xo.je/api/anime-world-india/v1/search.php?query=';
+        let searchTimeout;
+
+        // Toggle Search Modal
+        function toggleSearch(show) {
+            const modal = document.getElementById('search-modal');
+            const input = document.getElementById('search-input');
+            if (show) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                input.focus();
+                document.body.style.overflow = 'hidden';
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Redirect to search page
+        function performFullSearch() {
+            const query = document.getElementById('search-input').value.trim();
+            if (query) {
+                window.location.href = `/search.php?q=${encodeURIComponent(query)}`;
+            }
+        }
+
+        // Handle Search Typing
+        function handleSearch(query) {
+            const grid = document.getElementById('search-grid');
+            const placeholder = document.getElementById('search-placeholder');
+            
+            clearTimeout(searchTimeout);
+            
+            if (!query.trim()) {
+                grid.innerHTML = '';
+                placeholder.classList.remove('hidden');
+                return;
+            }
+
+            searchTimeout = setTimeout(async () => {
+                placeholder.classList.add('hidden');
+                grid.innerHTML = `<div class="col-span-full py-20 text-center text-slate-500 animate-pulse">Searching...</div>`;
+                
+                try {
+                    const response = await fetch(`${SEARCH_API_URL}${encodeURIComponent(query)}`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.results && data.results.length > 0) {
+                        renderGrid('search-grid', data.results, null, true);
+                    } else {
+                        grid.innerHTML = `<div class="col-span-full py-20 text-center text-slate-500">No results found for "${query}"</div>`;
+                    }
+                } catch (err) {
+                    grid.innerHTML = `<div class="col-span-full py-20 text-center text-red-400">Error fetching search results</div>`;
+                }
+            }, 500);
+        }
+
+        // Generate A-Z List
+        function initAZList() {
+            const container = document.getElementById('az-list');
+            const letters = ['#', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')];
+            
+            letters.forEach(char => {
+                const link = document.createElement('a');
+                link.href = char === '#' ? '/letter.php?0-9' : `/letter.php?${char.toLowerCase()}`;
+                link.textContent = char;
+                link.className = "px-3 py-1 bg-slate-800 rounded hover:bg-blue-600 hover:text-white transition text-sm font-medium text-slate-300 shrink-0";
+                container.appendChild(link);
+            });
+        }
+
+        async function fetchAnimeData() {
+            const loadingEl = document.getElementById('loading');
+            const contentEl = document.getElementById('content');
+            const errorEl = document.getElementById('error');
+
+            loadingEl.classList.remove('hidden');
+            contentEl.classList.add('hidden');
+            errorEl.classList.add('hidden');
+
+            try {
+                const response = await fetch(HOME_API_URL);
+                const data = await response.json();
+
+                if (data.success) {
+                    renderGrid('series-grid', data.latest_series, 'series');
+                    renderGrid('movies-grid', data.latest_movies, 'movie');
+                    
+                    loadingEl.classList.add('hidden');
+                    contentEl.classList.remove('hidden');
+                } else {
+                    throw new Error('API reported failure');
+                }
+            } catch (err) {
+                console.error('Fetch error:', err);
+                loadingEl.classList.add('hidden');
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        function renderGrid(containerId, items, fixedType = null, isSearch = false) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            items.forEach(item => {
+                const year = item.year ? item.year.split('-')[0] : 'N/A';
+                
+                // Determine type: use fixedType if provided (Home), otherwise use item.type (Search)
+                const type = fixedType || item.type;
+                const id = type === 'series' ? item.seriesId : item.movieId;
+                const redirectUrl = type === 'series' ? `/series.php?${id}` : `/movie.php?${id}`;
+                
+                const card = document.createElement('a');
+                card.href = redirectUrl;
+                card.className = 'anime-card group relative cursor-pointer block';
+                
+                card.innerHTML = `
+                    <div class="relative aspect-[2/3] rounded-xl overflow-hidden shadow-lg bg-slate-800">
+                        <img 
+                            src="${item.image}" 
+                            alt="${item.title}" 
+                            class="w-full h-full object-cover transform group-hover:scale-110 transition duration-500"
+                            onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'"
+                        >
+                        <!-- Overlay -->
+                        <div class="play-overlay absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-300 flex items-center justify-center">
+                            <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300">
+                                <i class="fas fa-play ml-1"></i>
+                            </div>
+                        </div>
+                        <!-- Badges -->
+                        <div class="absolute top-2 right-2 flex flex-col items-end gap-1">
+                            <span class="bg-black/70 backdrop-blur-md text-[10px] font-bold px-2 py-1 rounded text-yellow-400 border border-yellow-400/30">
+                                ${item.rating ? item.rating.replace('TMDB ', '') : '0.0'}
+                            </span>
+                            ${isSearch ? `<span class="bg-blue-600/90 backdrop-blur-md text-[9px] font-bold px-2 py-0.5 rounded text-white uppercase tracking-tighter">${type}</span>` : ''}
+                        </div>
+                        <div class="absolute bottom-2 left-2">
+                            <span class="bg-blue-600 text-[10px] font-bold px-2 py-0.5 rounded text-white uppercase tracking-wider">
+                                ${year}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <h3 class="text-sm font-semibold line-clamp-2 group-hover:text-blue-400 transition-colors">
+                            ${item.title}
+                        </h3>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        // Close modal on Esc key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') toggleSearch(false);
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initAZList();
+            fetchAnimeData();
+        });
+    </script>
+</body>
+</html>
